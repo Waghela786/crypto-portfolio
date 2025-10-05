@@ -1,14 +1,15 @@
-
+// backend/models/transactionModel.js
 const mongoose = require("mongoose");
 
-const transactionSchema = new mongoose.Schema({
-  walletId: { type: mongoose.Schema.Types.ObjectId, ref: "Wallet", required: true },
-  cryptoSymbol: { type: String, required: true },
-  type: { type: String, enum: ["BUY", "SELL"], required: true },
-  amount: { type: Number, required: true },        // crypto units
-  price: { type: Number, required: true },         // price per unit at tx time (USD)
-  totalValue: { type: Number, required: true },    // amount * price (USD)
-  date: { type: Date, default: Date.now }
-});
+const transactionSchema = mongoose.Schema(
+  {
+    user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+    coin: { type: String, required: true },
+    amount: { type: Number, required: true },
+    type: { type: String, enum: ["sent", "received"], required: true }, // sent or received
+    toUser: { type: mongoose.Schema.Types.ObjectId, ref: "User" }, // optional for sent transactions
+  },
+  { timestamps: true }
+);
 
 module.exports = mongoose.model("Transaction", transactionSchema);

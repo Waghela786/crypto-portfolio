@@ -54,4 +54,49 @@ router.delete("/:id", protect, async (req, res) => {
   }
 });
 
+// ---------------------------
+// Send coins from logged-in user to another user
+// ---------------------------
+router.post("/send", protect, async (req, res) => {
+  try {
+    const { toAddress, amount } = req.body;
+    if (!toAddress || !amount) return res.status(400).json({ message: "Missing fields" });
+
+    const senderWallet = await Wallet.findOne({ user: req.user._id });
+    const receiverWallet = await Wallet.findOne({ address: toAddress });
+
+    if (!senderWallet) return res.status(404).json({ message: "Sender wallet not found" });
+    if (!receiverWallet) return res.status(404).json({ message: "Receiver not found" });
+    if (senderWallet.balance < amount) return res.status(400).json({ message: "Insufficient balance" });
+
+    // Perform transaction
+    senderWallet.balance -= amount;
+    receiverWallet.balance += amount;
+
+    await senderWallet.save();
+    await receiverWallet.save();
+
+    res.json({ success: true, message: `Sent ${amount} coins to ${toAddress}` });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// ---------------------------
+// Receive coins (dummy route — for showing in UI only)
+// ---------------------------
+router.post("/receive", protect, async (req, res) => {
+  try {
+    const wallet = await Wallet.findOne({ user: req.user._id });
+    if (!wallet) return res.status(404).json({ message: "Wallet not found" });
+
+    res.json({
+      message: "Your wallet address to receive coins",
+      address: wallet.address,
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
 module.exports = router;
