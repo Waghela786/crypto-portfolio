@@ -1,70 +1,67 @@
-# Getting Started with Create React App
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+# My App (Frontend)
 
-## Available Scripts
+React frontend for the Crypto Portfolio project. Built with Create React App.
 
-In the project directory, you can run:
+Requirements
+- Node.js (LTS recommended)
+- npm
 
-### `npm start`
+Setup & run (development)
 
-Runs the app in the development mode.\
-Open [http://localhost:3001](http://localhost:3001) to view it in your browser.
+```powershell
+cd my-app
+npm install
+npm start
+```
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+The app should open at http://localhost:3000 by default. If your setup uses a different port (e.g., 3001), your terminal will display the URL.
 
-### `npm test`
+Expose the frontend to mobile on the same network
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+Option A — Local network (no extra tools)
+1. Ensure your PC and phone are on the same Wi-Fi.
+2. Start the dev server as above.
+3. Find your PC local IP in PowerShell:
 
-### `npm run build`
+```powershell
+ipconfig | Select-String 'IPv4' -Context 0,0
+```
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+4. Open on your phone's browser:
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+```
+http://<PC_IP>:3000
+```
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+If CRA does not accept external connections, start with:
 
-### `npm run eject`
+```powershell
+set "HOST=0.0.0.0"; npm start
+```
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+Option B — ngrok (tunnel)
+```powershell
+ngrok http 3000
+```
+Open the public https URL shown by ngrok on your phone.
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+API base URL
+- The frontend calls your backend API via `src/services/api.js`. When testing from mobile, ensure that file points to your machine IP (or the public tunnel URL) instead of `localhost` so requests reach your backend.
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+Build for production
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+```powershell
+npm run build
+# deploy contents of my-app/build to your static host (Netlify, Vercel, GitHub Pages, etc.)
+```
 
-## Learn More
+Troubleshooting
+- If mobile cannot reach the dev server, check firewall rules and whether the phone is on the same subnet.
+- If API requests fail from mobile, set the backend host in `src/services/api.js` to `http://<PC_IP>:<BACKEND_PORT>` and ensure backend is reachable.
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+Need help?
+- If you want, I can:
+	- Update `src/services/api.js` to automatically use your machine IP when on LAN.
+	- Generate a one-line script in `package.json` to start with HOST bound to 0.0.0.0.
 
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
