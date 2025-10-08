@@ -4,12 +4,8 @@ import axios from "axios";
 
 export default function Wallet() {
   const [wallets, setWallets] = useState([]);
-  const [coinsList, setCoinsList] = useState([]);
-  const [selectedCoin, setSelectedCoin] = useState("");
-  const [amount, setAmount] = useState("");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState("");
   const [totalValue, setTotalValue] = useState(0);
 
   const token = localStorage.getItem("token");
@@ -78,44 +74,9 @@ export default function Wallet() {
     return () => clearInterval(interval);
   }, [fetchWallets]);
 
-  // ✅ Fetch coins list
-  useEffect(() => {
-    const fetchCoins = async () => {
-      try {
-        const res = await axios.get(
-          "https://api.coingecko.com/api/v3/coins/list"
-        );
-        setCoinsList(res.data);
-      } catch (err) {
-        console.error("Failed to fetch coins list", err);
-      }
-    };
-    fetchCoins();
-  }, []);
+  // Note: coin addition moved to the Bank page. Wallet only displays holdings.
 
-  // ✅ Add coin to wallet
-  const handleAdd = async (e) => {
-    e.preventDefault();
-    if (!selectedCoin || !amount) return;
-
-    try {
-      await API.post(
-        "/wallets",
-        { coin: selectedCoin, amount: Number(amount) },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-
-      setSelectedCoin("");
-      setAmount("");
-      setMessage("✅ Coin added successfully");
-      fetchWallets();
-    } catch (err) {
-      console.error(err);
-      setMessage("❌ Failed to add wallet");
-    }
-  };
-
-  // ✅ Delete coin
+  // Delete coin
   const handleDelete = async (id, coin) => {
     if (!window.confirm(`Are you sure you want to delete ${coin.toUpperCase()}?`)) return;
 
@@ -131,19 +92,12 @@ export default function Wallet() {
     }
   };
 
-  const filteredCoins = coinsList.filter((c) =>
-    c.name.toLowerCase().includes(search.toLowerCase())
-  );
-
   if (loading) return <p style={{ textAlign: "center" }}>⏳ Loading wallet data...</p>;
 
   return (
     <div style={{ padding: "30px", maxWidth: "1000px", margin: "0 auto" }}>
       <h2
         style={{
-          textAlign: "center",
-          marginBottom: "20px",
-          color: "#2c3e50",
         }}
       >
         💰 My Crypto Wallet
@@ -175,80 +129,13 @@ export default function Wallet() {
         <h3 style={{ margin: 0 }}>Total Portfolio Value: 💵 ${totalValue}</h3>
       </div>
 
-      {/* Add Coin Form */}
-      <form
-        onSubmit={handleAdd}
-        style={{
-          display: "flex",
-          gap: "10px",
-          flexWrap: "wrap",
-          justifyContent: "center",
-          marginBottom: "30px",
-        }}
-      >
-        <input
-          type="text"
-          placeholder="Search coin..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          style={{
-            padding: "10px",
-            flex: "1",
-            minWidth: "200px",
-            border: "1px solid #ccc",
-            borderRadius: "5px",
-          }}
-        />
-
-        <select
-          value={selectedCoin}
-          onChange={(e) => setSelectedCoin(e.target.value)}
-          required
-          style={{
-            padding: "10px",
-            flex: "1",
-            minWidth: "200px",
-            border: "1px solid #ccc",
-            borderRadius: "5px",
-          }}
-        >
-          <option value="">Select Coin</option>
-          {filteredCoins.slice(0, 50).map((coin) => (
-            <option key={coin.id} value={coin.id}>
-              {coin.name} ({coin.symbol.toUpperCase()})
-            </option>
-          ))}
-        </select>
-
-        <input
-          type="number"
-          placeholder="Amount"
-          value={amount}
-          onChange={(e) => setAmount(e.target.value)}
-          required
-          style={{
-            padding: "10px",
-            width: "120px",
-            border: "1px solid #ccc",
-            borderRadius: "5px",
-          }}
-        />
-
-        <button
-          type="submit"
-          style={{
-            padding: "10px 20px",
-            backgroundColor: "#4caf50",
-            color: "white",
-            border: "none",
-            borderRadius: "5px",
-            cursor: "pointer",
-            fontWeight: "bold",
-          }}
-        >
-          ➕ Add Coin
-        </button>
-      </form>
+      {/* Add Coin moved to Bank page */}
+      <div style={{ textAlign: "center", marginBottom: 20 }}>
+        <p>
+          To add coins to your wallet use the <strong>Bank</strong> page.
+        </p>
+        <a href="/bank" style={{ padding: "8px 14px", background: "#2563eb", color: "#fff", borderRadius: 6, textDecoration: "none" }}>Go to Bank</a>
+      </div>
 
       {/* Wallet Cards */}
       {wallets.length === 0 ? (

@@ -21,16 +21,27 @@ export default function Login({ onLogin }) {
     try {
       const res = await API.post("/users/login", { email, password });
 
-      // Save token and email
+      // Save token and user info in localStorage
       localStorage.setItem("token", res.data.token);
-      localStorage.setItem("userEmail", res.data.email);
+      // backend returns user object (id, name, email) under res.data.user
+      if (res.data.user) {
+        localStorage.setItem("user", JSON.stringify(res.data.user));
+        localStorage.setItem("userEmail", res.data.user.email || res.data.user.email);
+      }
 
-      if (onLogin) onLogin(res.data);
+      if (onLogin) onLogin(res.data.user || res.data);
 
       setMessage("✅ Login successful!");
 
-      // Redirect to transactions/dashboard
-      navigate("/transactions");
+      // Notify other components that login happened (useful for NotificationBell to fetch immediately)
+      try {
+        const event = new CustomEvent("app:login", { detail: res.data.user || res.data });
+        window.dispatchEvent(event);
+      } catch (e) {
+        console.debug("Login: failed to dispatch app:login event", e);
+      }
+      // Redirect to Dashboard instead of Transactions
+      navigate("/dashboard");
     } catch (err) {
       const errorMsg = err.response?.data?.message || "❌ Login failed";
       setMessage(errorMsg);

@@ -1,7 +1,9 @@
-const express = require("express");
+// backend/routes/walletRoutes.js
+import express from "express";
+import Wallet from "../models/walletModel.js";
+import { protect } from "../middleware/authMiddleware.js";
+
 const router = express.Router();
-const Wallet = require("../models/walletModel");
-const { protect } = require("../middleware/authMiddleware");
 
 // ---------------------------
 // Get all wallets for logged-in user
@@ -40,7 +42,7 @@ router.delete("/:id", protect, async (req, res) => {
   try {
     const wallet = await Wallet.findOneAndDelete({
       _id: req.params.id,
-      user: req.user._id, // Ensure user can only delete their own wallet
+      user: req.user._id,
     });
 
     if (!wallet) {
@@ -60,14 +62,18 @@ router.delete("/:id", protect, async (req, res) => {
 router.post("/send", protect, async (req, res) => {
   try {
     const { toAddress, amount } = req.body;
-    if (!toAddress || !amount) return res.status(400).json({ message: "Missing fields" });
+    if (!toAddress || !amount)
+      return res.status(400).json({ message: "Missing fields" });
 
     const senderWallet = await Wallet.findOne({ user: req.user._id });
     const receiverWallet = await Wallet.findOne({ address: toAddress });
 
-    if (!senderWallet) return res.status(404).json({ message: "Sender wallet not found" });
-    if (!receiverWallet) return res.status(404).json({ message: "Receiver not found" });
-    if (senderWallet.balance < amount) return res.status(400).json({ message: "Insufficient balance" });
+    if (!senderWallet)
+      return res.status(404).json({ message: "Sender wallet not found" });
+    if (!receiverWallet)
+      return res.status(404).json({ message: "Receiver not found" });
+    if (senderWallet.balance < amount)
+      return res.status(400).json({ message: "Insufficient balance" });
 
     // Perform transaction
     senderWallet.balance -= amount;
@@ -99,4 +105,4 @@ router.post("/receive", protect, async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;

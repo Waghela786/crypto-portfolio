@@ -1,6 +1,7 @@
-const mongoose = require("mongoose");
+// backend/models/transactionModel.js
+import mongoose from "mongoose";
 
-const transactionSchema = mongoose.Schema(
+const transactionSchema = new mongoose.Schema(
   {
     from: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
     fromEmail: { type: String, required: true },
@@ -12,4 +13,6 @@ const transactionSchema = mongoose.Schema(
   { timestamps: true }
 );
 
-module.exports = mongoose.model("Transaction", transactionSchema);
+const Transaction = mongoose.model("Transaction", transactionSchema);
+
+export default Transaction;

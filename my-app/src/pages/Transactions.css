@@ -1,0 +1,141 @@
+/* Transactions.css - improved layout and styles for Transactions page */
+
+.tx-page {
+  padding: 30px 16px;
+  display: flex;
+  justify-content: center;
+}
+
+.tx-container {
+  width: 100%;
+  max-width: 1000px;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 6px 18px rgba(9, 30, 66, 0.08);
+  padding: 24px;
+}
+
+.tx-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.tx-header h2 {
+  margin: 0;
+  font-size: 22px;
+}
+
+.tx-alert {
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-weight: 600;
+}
+
+.tx-alert.error { background: #ffe9e9; color: #b00020; }
+.tx-alert.success { background: #e9f7ee; color: #05682a; }
+
+.tx-main {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 24px;
+}
+
+.tx-aside {
+  border-right: 1px solid #f0f0f0;
+  padding-right: 16px;
+}
+
+.tx-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.tx-tabs button {
+  padding: 8px 14px;
+  background: #f3f3f3;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.tx-tabs button.active {
+  background: #4caf50;
+  color: white;
+}
+
+.tx-form label {
+  display: block;
+  margin-bottom: 12px;
+  font-size: 14px;
+}
+
+.tx-form select,
+.tx-form input {
+  width: 100%;
+  margin-top: 6px;
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid #e0e0e0;
+  box-sizing: border-box;
+}
+
+.tx-actions {
+  margin-top: 10px;
+}
+
+.btn {
+  padding: 10px 16px;
+  border-radius: 6px;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-primary {
+  background: #4caf50;
+  color: #fff;
+}
+
+.btn.disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+.tx-content {
+  padding-left: 8px;
+}
+
+.tx-empty {
+  color: #666;
+  text-align: center;
+  padding: 40px 0;
+}
+
+.tx-list { list-style: none; padding: 0; margin: 0; }
+
+.tx-item {
+  padding: 12px 14px;
+  border-radius: 8px;
+  background: linear-gradient(180deg, #ffffff 0%, #fbfbfb 100%);
+  box-shadow: 0 1px 0 rgba(0,0,0,0.03);
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+}
+
+.tx-item-main { display: flex; gap: 12px; align-items: center; }
+
+.tx-icon { font-size: 22px; }
+
+.tx-title { font-size: 15px; }
+
+.tx-time { color: #888; font-size: 12px; margin-top: 4px; }
+
+@media (max-width: 800px) {
+  .tx-main { grid-template-columns: 1fr; }
+  .tx-aside { border-right: none; padding-right: 0; }
+}

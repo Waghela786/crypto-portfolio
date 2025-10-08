@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import API from "../services/api";
+import API from "../services/api"; // axios instance with baseURL
+
 export default function Register() {
   const navigate = useNavigate();
   const [name, setName] = useState("");
@@ -8,6 +9,7 @@ export default function Register() {
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
+  const [registered, setRegistered] = useState(false);
 
   const handleRegister = async (e) => {
     e.preventDefault();
@@ -16,19 +18,21 @@ export default function Register() {
 
     try {
       const res = await API.post("/users/register", { name, email, password });
-      if (res.data.token) {
-        localStorage.setItem("token", res.data.token);
-        setMessage("✅ Registered successfully!");
+      console.log("Register response:", res.data);
+
+      if (res.data) {
+        // Show success message and then automatically redirect to login after a short delay
+        setMessage("✅ Registered successfully! Redirecting to login...");
         setName("");
         setEmail("");
         setPassword("");
-        // Redirect to dashboard after 1.5s
-        setTimeout(() => {
-          navigate("/dashboard");
-        }, 1500);
+        setRegistered(true);
+        setTimeout(() => navigate("/login"), 1200);
+      } else {
+        setMessage("❌ Unexpected response from server");
       }
     } catch (err) {
-      console.error(err);
+      console.error("Registration error:", err);
       setMessage(err.response?.data?.message || "❌ Registration failed");
     } finally {
       setLoading(false);
@@ -72,74 +76,83 @@ export default function Register() {
           </p>
         )}
 
-        <form onSubmit={handleRegister} style={{ display: "flex", flexDirection: "column", gap: "15px" }}>
-          <input
-            type="text"
-            placeholder="Full Name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            required
-            style={{
-              padding: "12px",
-              borderRadius: "8px",
-              border: "1px solid #ccc",
-              fontSize: "16px",
-            }}
-          />
-          <input
-            type="email"
-            placeholder="Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            style={{
-              padding: "12px",
-              borderRadius: "8px",
-              border: "1px solid #ccc",
-              fontSize: "16px",
-            }}
-          />
-          <input
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            style={{
-              padding: "12px",
-              borderRadius: "8px",
-              border: "1px solid #ccc",
-              fontSize: "16px",
-            }}
-          />
+        {!registered ? (
+          <>
+            <form
+              onSubmit={handleRegister}
+              style={{ display: "flex", flexDirection: "column", gap: "15px" }}
+            >
+              <input
+                type="text"
+                placeholder="Full Name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+                style={{ padding: "12px", borderRadius: "8px", border: "1px solid #ccc", fontSize: "16px" }}
+              />
+              <input
+                type="email"
+                placeholder="Email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                style={{ padding: "12px", borderRadius: "8px", border: "1px solid #ccc", fontSize: "16px" }}
+              />
+              <input
+                type="password"
+                placeholder="Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                style={{ padding: "12px", borderRadius: "8px", border: "1px solid #ccc", fontSize: "16px" }}
+              />
 
-          <button
-            type="submit"
-            disabled={loading}
-            style={{
-              padding: "12px",
-              borderRadius: "8px",
-              border: "none",
-              background: "#667eea",
-              color: "#fff",
-              fontSize: "16px",
-              cursor: loading ? "not-allowed" : "pointer",
-              transition: "0.3s",
-            }}
-          >
-            {loading ? "Registering..." : "Register"}
-          </button>
-        </form>
+              <button
+                type="submit"
+                disabled={loading}
+                style={{
+                  padding: "12px",
+                  borderRadius: "8px",
+                  border: "none",
+                  background: "#667eea",
+                  color: "#fff",
+                  fontSize: "16px",
+                  cursor: loading ? "not-allowed" : "pointer",
+                  transition: "0.3s",
+                }}
+              >
+                {loading ? "Registering..." : "Register"}
+              </button>
+            </form>
 
-        <p style={{ textAlign: "center", marginTop: "20px", color: "#555" }}>
-          Already have an account?{" "}
-          <span
-            style={{ color: "#667eea", cursor: "pointer" }}
-            onClick={() => navigate("/login")}
-          >
-            Login
-          </span>
-        </p>
+            <p style={{ textAlign: "center", marginTop: "20px", color: "#555" }}>
+              Already have an account?{" "}
+              <span
+                style={{ color: "#667eea", cursor: "pointer" }}
+                onClick={() => navigate("/login")}
+              >
+                Login
+              </span>
+            </p>
+          </>
+        ) : (
+          <div style={{ textAlign: "center", marginTop: 20 }}>
+            <p style={{ marginBottom: 12 }}>{message}</p>
+            <button
+              onClick={() => navigate("/login")}
+              style={{
+                padding: "10px 16px",
+                borderRadius: 8,
+                border: "none",
+                background: "#34d399",
+                color: "#fff",
+                cursor: "pointer",
+              }}
+            >
+              Go to login
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

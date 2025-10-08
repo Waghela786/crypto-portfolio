@@ -1,6 +1,7 @@
-const mongoose = require("mongoose");
+// backend/models/walletModel.js
+import mongoose from "mongoose";
 
-const walletSchema = mongoose.Schema(
+const walletSchema = new mongoose.Schema(
   {
     user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
     coin: { type: String, required: true },
@@ -9,4 +10,6 @@ const walletSchema = mongoose.Schema(
   { timestamps: true }
 );
 
-module.exports = mongoose.model("Wallet", walletSchema);
+const Wallet = mongoose.model("Wallet", walletSchema);
+
+export default Wallet;

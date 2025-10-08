@@ -1,11 +1,34 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import NotificationBell from "./NotificationBell";
+import API from "../services/api";
 
 export default function Navbar() {
   const navigate = useNavigate();
+  const [user, setUser] = useState(null);
+  const [token, setToken] = useState(localStorage.getItem("token"));
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      if (!token) return;
+      try {
+        const res = await API.get("/users/me", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setUser(res.data);
+        localStorage.setItem("user", JSON.stringify(res.data)); // store for NotificationBell
+      } catch (err) {
+        console.error("Failed to fetch user:", err);
+      }
+    };
+    fetchUser();
+  }, [token]);
 
   const handleLogout = () => {
     localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    setUser(null);
+    setToken(null);
     navigate("/login");
   };
 
@@ -26,11 +49,7 @@ export default function Navbar() {
     >
       {/* Logo Section */}
       <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          cursor: "pointer",
-        }}
+        style={{ display: "flex", alignItems: "center", cursor: "pointer" }}
         onClick={() => navigate("/dashboard")}
       >
         <img
@@ -43,7 +62,7 @@ export default function Navbar() {
         </h2>
       </div>
 
-      {/* Navigation Links */}
+      {/* Navigation Links + Notification */}
       <div
         style={{
           display: "flex",
@@ -52,37 +71,28 @@ export default function Navbar() {
           fontSize: "16px",
         }}
       >
-        <Link
-          to="/dashboard"
-          style={{ color: "#fff", textDecoration: "none", transition: "0.2s" }}
-        >
+        <Link to="/dashboard" style={{ color: "#fff", textDecoration: "none" }}>
           Dashboard
         </Link>
-        <Link
-          to="/wallets"
-          style={{ color: "#fff", textDecoration: "none", transition: "0.2s" }}
-        >
+        <Link to="/wallets" style={{ color: "#fff", textDecoration: "none" }}>
           Wallet
         </Link>
-        {/* ✅ New Transactions Menu */}
-        <Link
-          to="/transactions"
-          style={{ color: "#fff", textDecoration: "none", transition: "0.2s" }}
-        >
+        <Link to="/transactions" style={{ color: "#fff", textDecoration: "none" }}>
           Transactions
         </Link>
-        <Link
-          to="/register"
-          style={{ color: "#fff", textDecoration: "none", transition: "0.2s" }}
-        >
+        <Link to="/bank" style={{ color: "#fff", textDecoration: "none" }}>
+          Bank
+        </Link>
+        <Link to="/register" style={{ color: "#fff", textDecoration: "none" }}>
           Register
         </Link>
-        <Link
-          to="/login"
-          style={{ color: "#fff", textDecoration: "none", transition: "0.2s" }}
-        >
+        <Link to="/login" style={{ color: "#fff", textDecoration: "none" }}>
           Login
         </Link>
+
+  {/* ✅ Notification Bell */}
+  {console.debug && console.debug("Navbar: render state", { user: !!user, token: !!token })}
+  {user && token && <NotificationBell token={token} userId={user._id} />}
 
         <button
           onClick={handleLogout}

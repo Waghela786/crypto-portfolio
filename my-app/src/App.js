@@ -8,6 +8,8 @@ import ResetPassword from "./pages/ResetPassword";
 import Dashboard from "./pages/Dashboard";
 import Wallet from "./pages/Wallet";
 import Transactions from "./pages/Transactions"; // ✅ new import
+import Notifications from "./pages/Notifications";
+import Bank from "./pages/Bank";
 import Navbar from "./components/Navbar";
 import Logout from "./pages/Logout";
 
@@ -23,7 +25,7 @@ function App() {
       <Navbar /> {/* ✅ Navbar visible on all pages */}
       <Routes>
         {/* ---------- Public Routes ---------- */}
-        <Route path="/" element={<Navigate to="/login" />} />
+  <Route path="/" element={<Navigate to="/register" />} />
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
@@ -55,6 +57,23 @@ function App() {
             </PrivateRoute>
           }
         />
+        <Route
+          path="/notifications"
+          element={
+            <PrivateRoute>
+              <Notifications />
+            </PrivateRoute>
+          }
+        />
+
+          <Route
+            path="/bank"
+            element={
+              <PrivateRoute>
+                <Bank />
+              </PrivateRoute>
+            }
+          />
 
         {/* ---------- 404 Fallback ---------- */}
         <Route
