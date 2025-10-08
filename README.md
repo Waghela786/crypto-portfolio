@@ -2,8 +2,6 @@
 
 A full-stack cryptocurrency portfolio management app built with React, Node.js, Express, and MongoDB. It allows users to register, log in, verify recipients, and manage crypto transactions securely — all in one place.
 
-🔥 This README is ready to upload directly to your GitHub repository (`crypto-portfolio`). It includes a project overview, setup instructions for frontend and backend, tech stack, API examples, screenshot placeholders, and future enhancements.
-
 ## Table of Contents
 
 - [Project Structure](#project-structure)
@@ -110,14 +108,18 @@ Adjust the base URL (http://localhost:5000) if your backend runs on a different 
 
 ## Screenshots
 
-Add your screenshots to an `assets/` folder and update the image paths below.
+ screenshots to an `assets/` folder
 
-- Dashboard
-  ![Dashboard](docs/assets/dashboard.png)
-- Login Page
-  ![Login](docs/assets/login.png)
+- Wallet : 
+  
+- <img width="1877" height="927" alt="image" src="https://github.com/user-attachments/assets/6786562c-f662-42ec-8e4d-1f8e04647c48" />
 
-> Tip: Replace these placeholders with real images before publishing.
+ 
+
+-Dashboard :
+
+![Screenshot 2025-10-08 152111](https://github.com/user-attachments/assets/20ce4dc7-31bd-4521-9a49-788e6d6082dc)
+
 
 ## Future Enhancements
 
@@ -135,25 +137,8 @@ GitHub: https://github.com/Waghela786
 
 ## GitHub Metadata (Optional)
 
-You can fill these in the “About” section of your repo on GitHub:
-
 - Description: Full-stack Crypto Portfolio App built with React, Node.js, Express, and MongoDB.
 - Topics: react, nodejs, express, mongodb, jwt, crypto-portfolio
 
----
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-If you'd like, I can also:
-
-- Add example .env templates (`backend/.env.example`)
-- Wire up a simple GitHub Actions workflow to run lint/tests on push
-- Create a GitHub Pages site for the `docs/` folder
-
-Let me know which of those you'd like next.
-# Crypto Portfolio Project
-
-This project has two parts:
-
-- **Frontend:** [my-app/README.md](./my-app/README.md)
-- **Backend:** [backend/README.md](./backend/README.md) 
-
-Open the folder above for detailed setup instructions.
