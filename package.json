@@ -1,4 +1,11 @@
 {
+  "name": "crypto-portfolio",
+  "private": true,
+  "scripts": {
+    "build:frontend": "cd my-app && npm ci && npm run build",
+    "build": "npm run build:frontend",
+    "start:frontend": "cd my-app && npm start"
+  },
   "dependencies": {
     "axios": "^1.12.2"
   }

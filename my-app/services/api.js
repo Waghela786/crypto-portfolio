@@ -1,8 +1,13 @@
 // src/services/api.js
 import axios from "axios";
 
+// Prefer an environment-configured base URL so Render (or other hosts) can
+// point the frontend to the correct backend without changing code.
+// Set REACT_APP_API_BASE in your Render service (or local .env) to override.
+const defaultBase = process.env.REACT_APP_API_BASE || "https://crypto-portfolio-backend-pepi.onrender.com/api";
+
 const API = axios.create({
-  baseURL: "http://localhost:5000/api", // adjust to your backend URL
+  baseURL: defaultBase,
 });
 
 // Optional: attach token automatically
