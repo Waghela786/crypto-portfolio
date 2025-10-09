@@ -1,0 +1,5 @@
+{
+  // Prevent VS Code from trying to download JSON schemas from schemastore.org
+  // which can show "getaddrinfo ENOTFOUND www.schemastore.org" when offline
+  "json.schemaDownload.enable": false
+}
