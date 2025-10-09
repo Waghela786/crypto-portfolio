@@ -7,6 +7,7 @@ import { Server } from "socket.io";
 import axios from "axios";
 import fs from "fs";
 import path from "path";
+import url from "url";
 
 // --- 0️⃣ Load Environment Variables ---
 dotenv.config();
@@ -20,12 +21,10 @@ const server = http.createServer(app);
 const PORT = process.env.PORT || 5000;
 
 // --- 1️⃣ Global Middleware ---
-// CORS: allow configured CLIENT_URL plus local dev ports
 const allowedOrigins = [process.env.CLIENT_URL, "http://localhost:3000", "http://localhost:3001"].filter(Boolean);
 app.use(
   cors({
     origin: function (origin, callback) {
-      // allow requests with no origin (e.g., curl, mobile apps)
       if (!origin) return callback(null, true);
       if (allowedOrigins.indexOf(origin) !== -1) return callback(null, true);
       console.warn("Blocked CORS request from origin:", origin);
@@ -34,20 +33,14 @@ app.use(
     credentials: true,
   })
 );
-// Accept JSON bodies; allow `null` values (strict:false) so clients sending null won't crash the parser
-// Capture raw body for diagnostics and accept JSON bodies; allow `null` values (strict:false)
 app.use(express.json({
   strict: false,
   verify: (req, res, buf, encoding) => {
-    try {
-      req.rawBody = buf.toString(encoding || "utf8");
-    } catch (e) {
-      req.rawBody = "";
-    }
+    try { req.rawBody = buf.toString(encoding || "utf8"); } 
+    catch (e) { req.rawBody = ""; }
   },
 }));
 
-// Graceful handler for malformed JSON (body-parser SyntaxError)
 app.use((err, req, res, next) => {
   if (err && err.type === "entity.parse.failed") {
     const raw = req && req.rawBody ? req.rawBody : "<no raw body>";
@@ -58,13 +51,8 @@ app.use((err, req, res, next) => {
   return next(err);
 });
 
-// Simple request logger
 app.use((req, res, next) => {
-  console.log(
-    `[${new Date().toISOString()}] ${req.method} ${req.originalUrl} - IP: ${req.ip} Origin: ${
-      req.headers.origin || "-"
-    }`
-  );
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.originalUrl} - IP: ${req.ip} Origin: ${req.headers.origin || "-"}`);
   next();
 });
 
@@ -75,7 +63,6 @@ app.get("/api/proxy/coins/list", async (req, res) => {
   try {
     const response = await axios.get("https://api.coingecko.com/api/v3/coins/list", { timeout: 15000 });
     const data = response.data;
-    // persist cache for offline/temporary-failure use
     try {
       await fs.promises.mkdir(cacheDir, { recursive: true });
       await fs.promises.writeFile(cacheFile, JSON.stringify(data));
@@ -86,7 +73,6 @@ app.get("/api/proxy/coins/list", async (req, res) => {
     return res.json(data);
   } catch (error) {
     console.error("CoinGecko proxy error:", error && error.message ? error.message : error);
-    // Attempt to return cached copy if available
     try {
       const cached = await fs.promises.readFile(cacheFile, "utf8");
       const parsed = JSON.parse(cached);
@@ -101,11 +87,7 @@ app.get("/api/proxy/coins/list", async (req, res) => {
 
 // --- 2️⃣ Diagnostic Endpoints ---
 app.get("/api/ping", (req, res) => {
-  res.json({
-    ok: true,
-    time: Date.now(),
-    env: process.env.NODE_ENV || "development",
-  });
+  res.json({ ok: true, time: Date.now(), env: process.env.NODE_ENV || "development" });
 });
 app.get("/api/debug", (req, res) => {
   res.json({
@@ -142,26 +124,16 @@ app.use("/api/debug", debugRoutes);
 // --- 5️⃣ Error Handling Middleware ---
 app.use((err, req, res, next) => {
   console.error("❌ Error:", err.stack);
-  res.status(err.status || 500).json({
-    success: false,
-    message: err.message || "Internal Server Error",
-  });
+  res.status(err.status || 500).json({ success: false, message: err.message || "Internal Server Error" });
 });
 
 // --- 6️⃣ Socket.IO Setup ---
-const io = new Server(server, {
-  cors: { origin: allowedOrigins, methods: ["GET", "POST"], credentials: true },
-});
-
-// Map to store connected users: userId -> Set(socket.id)
+const io = new Server(server, { cors: { origin: allowedOrigins, methods: ["GET", "POST"], credentials: true } });
 const connectedUsers = new Map();
-
-// Socket auth middleware: expect client to send { auth: { token } } during handshake
 io.use((socket, next) => {
   try {
     const token = socket.handshake.auth && socket.handshake.auth.token;
-    if (!token) return next(); // allow anonymous connections (optional)
-
+    if (!token) return next();
     const jwt = require("jsonwebtoken");
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     socket.userId = decoded.id;
@@ -171,11 +143,8 @@ io.use((socket, next) => {
     return next();
   }
 });
-
 io.on("connection", (socket) => {
   console.log("🔔 User connected:", socket.id, "userId:", socket.userId || "(unknown)");
-
-  // If socket was authenticated and has userId, add to the set
   if (socket.userId) {
     const uid = String(socket.userId);
     const set = connectedUsers.get(uid) || new Set();
@@ -183,10 +152,8 @@ io.on("connection", (socket) => {
     connectedUsers.set(uid, set);
     console.log("👤 Socket mapped to user:", uid, Array.from(set));
   }
-
   socket.on("disconnect", () => {
     console.log("❌ User disconnected:", socket.id, "userId:", socket.userId || "(unknown)");
-    // Remove disconnected socket from all sets
     connectedUsers.forEach((set, key) => {
       if (set.has(socket.id)) {
         set.delete(socket.id);
@@ -196,25 +163,35 @@ io.on("connection", (socket) => {
     });
   });
 });
-
-// Make io accessible in routes
 app.set("io", io);
 app.set("connectedUsers", connectedUsers);
 
 // --- 7️⃣ MongoDB Connection + Server Startup ---
+// Encode password automatically if it contains special characters
+const encodeMongoPassword = (uri) => {
+  try {
+    const parsed = new URL(uri);
+    if (parsed.password) parsed.password = encodeURIComponent(parsed.password);
+    return parsed.toString();
+  } catch (err) {
+    console.warn("⚠️ Failed to parse MONGO_URI for encoding:", err.message);
+    return uri;
+  }
+};
+
+const MONGO_URI = encodeMongoPassword(process.env.MONGO_URI);
+
 const startServer = async () => {
   try {
-    await mongoose.connect(process.env.MONGO_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
+    console.log("🔗 Connecting to MongoDB...");
+    await mongoose.connect(MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true });
     console.log("✅ MongoDB connected");
 
     server.listen(PORT, "0.0.0.0", () =>
       console.log(`🚀 Server running on port ${PORT} (bound to 0.0.0.0)`)
     );
   } catch (err) {
-    console.error("❌ MongoDB connection error:", err);
+    console.error("❌ MongoDB connection error:", err.message);
     process.exit(1);
   }
 };
