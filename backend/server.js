@@ -25,6 +25,9 @@ const allowedOrigins = [
   "http://localhost:3001",
 ].filter(Boolean);
 
+// Log the allowed origins at startup for easier debugging in hosted environments
+console.log("CORS allowed origins:", allowedOrigins);
+
 app.use(
   cors({
     origin: function (origin, callback) {
