@@ -7,11 +7,9 @@ import { Server } from "socket.io";
 import axios from "axios";
 import fs from "fs";
 import path from "path";
-import url from "url";
 
 // --- 0️⃣ Load Environment Variables ---
 dotenv.config();
-// Avoid logging secrets in production
 if (!process.env.JWT_SECRET) {
   console.warn("⚠️ Warning: JWT_SECRET is not set");
 }
@@ -21,74 +19,96 @@ const server = http.createServer(app);
 const PORT = process.env.PORT || 5000;
 
 // --- 1️⃣ Global Middleware ---
-const allowedOrigins = [process.env.CLIENT_URL, "http://localhost:3000", "http://localhost:3001"].filter(Boolean);
+const allowedOrigins = [
+  process.env.CLIENT_URL,
+  "http://localhost:3000",
+  "http://localhost:3001",
+].filter(Boolean);
+
 app.use(
   cors({
     origin: function (origin, callback) {
       if (!origin) return callback(null, true);
-      if (allowedOrigins.indexOf(origin) !== -1) return callback(null, true);
+      if (allowedOrigins.includes(origin)) return callback(null, true);
       console.warn("Blocked CORS request from origin:", origin);
       return callback(new Error("Not allowed by CORS"));
     },
     credentials: true,
   })
 );
-app.use(express.json({
-  strict: false,
-  verify: (req, res, buf, encoding) => {
-    try { req.rawBody = buf.toString(encoding || "utf8"); } 
-    catch (e) { req.rawBody = ""; }
-  },
-}));
 
+app.use(
+  express.json({
+    strict: false,
+    verify: (req, res, buf, encoding) => {
+      try {
+        req.rawBody = buf.toString(encoding || "utf8");
+      } catch (e) {
+        req.rawBody = "";
+      }
+    },
+  })
+);
+
+// JSON parse error handling
 app.use((err, req, res, next) => {
   if (err && err.type === "entity.parse.failed") {
-    const raw = req && req.rawBody ? req.rawBody : "<no raw body>";
-    const truncated = typeof raw === "string" && raw.length > 1000 ? raw.slice(0, 1000) + "...(truncated)" : raw;
-    console.warn("❌ Invalid JSON received:", err.message, "path:", req.originalUrl, "method:", req.method, "rawBody:", truncated);
+    const raw = req?.rawBody || "<no raw body>";
+    const truncated =
+      typeof raw === "string" && raw.length > 1000
+        ? raw.slice(0, 1000) + "...(truncated)"
+        : raw;
+    console.warn(
+      "❌ Invalid JSON received:",
+      err.message,
+      "path:",
+      req.originalUrl,
+      "method:",
+      req.method,
+      "rawBody:",
+      truncated
+    );
     return res.status(400).json({ success: false, message: "Invalid JSON payload" });
   }
   return next(err);
 });
 
+// Logging middleware
 app.use((req, res, next) => {
-  console.log(`[${new Date().toISOString()}] ${req.method} ${req.originalUrl} - IP: ${req.ip} Origin: ${req.headers.origin || "-"}`);
+  console.log(
+    `[${new Date().toISOString()}] ${req.method} ${req.originalUrl} - IP: ${req.ip} Origin: ${req.headers.origin || "-"}`
+  );
   next();
 });
 
-// CoinGecko proxy endpoint with cached fallback
+// --- CoinGecko proxy endpoint (cached fallback) ---
 app.get("/api/proxy/coins/list", async (req, res) => {
   const cacheDir = path.join(process.cwd(), "data");
   const cacheFile = path.join(cacheDir, "coins-cache.json");
+
   try {
     const response = await axios.get("https://api.coingecko.com/api/v3/coins/list", { timeout: 15000 });
     const data = response.data;
     try {
       await fs.promises.mkdir(cacheDir, { recursive: true });
       await fs.promises.writeFile(cacheFile, JSON.stringify(data));
-      console.debug("CoinGecko proxy: cache written to", cacheFile);
     } catch (writeErr) {
-      console.warn("CoinGecko proxy: failed to write cache", writeErr && writeErr.message ? writeErr.message : writeErr);
+      console.warn("CoinGecko cache write failed:", writeErr.message);
     }
     return res.json(data);
-  } catch (error) {
-    console.error("CoinGecko proxy error:", error && error.message ? error.message : error);
+  } catch (fetchErr) {
+    console.warn("CoinGecko fetch failed, returning cached data if available");
     try {
       const cached = await fs.promises.readFile(cacheFile, "utf8");
-      const parsed = JSON.parse(cached);
-      console.warn("CoinGecko proxy: returning cached coins list due to fetch error");
-      return res.json(parsed);
+      return res.json(JSON.parse(cached));
     } catch (cacheErr) {
-      console.error("CoinGecko proxy: cache read failed:", cacheErr && cacheErr.message ? cacheErr.message : cacheErr);
-      return res.status(500).json({ error: "Failed to fetch coins and no cache available", details: error && error.message ? error.message : String(error) });
+      return res.status(500).json({ error: "Failed to fetch coins and no cache available" });
     }
   }
 });
 
-// --- 2️⃣ Diagnostic Endpoints ---
-app.get("/api/ping", (req, res) => {
-  res.json({ ok: true, time: Date.now(), env: process.env.NODE_ENV || "development" });
-});
+// --- Diagnostic Endpoints ---
+app.get("/api/ping", (req, res) => res.json({ ok: true, time: Date.now() }));
 app.get("/api/debug", (req, res) => {
   res.json({
     ip: req.ip,
@@ -130,9 +150,10 @@ app.use((err, req, res, next) => {
 // --- 6️⃣ Socket.IO Setup ---
 const io = new Server(server, { cors: { origin: allowedOrigins, methods: ["GET", "POST"], credentials: true } });
 const connectedUsers = new Map();
+
 io.use((socket, next) => {
   try {
-    const token = socket.handshake.auth && socket.handshake.auth.token;
+    const token = socket.handshake.auth?.token;
     if (!token) return next();
     const jwt = require("jsonwebtoken");
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
@@ -143,6 +164,7 @@ io.use((socket, next) => {
     return next();
   }
 });
+
 io.on("connection", (socket) => {
   console.log("🔔 User connected:", socket.id, "userId:", socket.userId || "(unknown)");
   if (socket.userId) {
@@ -150,46 +172,31 @@ io.on("connection", (socket) => {
     const set = connectedUsers.get(uid) || new Set();
     set.add(socket.id);
     connectedUsers.set(uid, set);
-    console.log("👤 Socket mapped to user:", uid, Array.from(set));
   }
   socket.on("disconnect", () => {
-    console.log("❌ User disconnected:", socket.id, "userId:", socket.userId || "(unknown)");
     connectedUsers.forEach((set, key) => {
       if (set.has(socket.id)) {
         set.delete(socket.id);
         if (set.size === 0) connectedUsers.delete(key);
-        else connectedUsers.set(key, set);
       }
     });
   });
 });
+
 app.set("io", io);
 app.set("connectedUsers", connectedUsers);
 
 // --- 7️⃣ MongoDB Connection + Server Startup ---
-// Encode password automatically if it contains special characters
-const encodeMongoPassword = (uri) => {
-  try {
-    const parsed = new URL(uri);
-    if (parsed.password) parsed.password = encodeURIComponent(parsed.password);
-    return parsed.toString();
-  } catch (err) {
-    console.warn("⚠️ Failed to parse MONGO_URI for encoding:", err.message);
-    return uri;
-  }
-};
-
-const MONGO_URI = encodeMongoPassword(process.env.MONGO_URI);
-
 const startServer = async () => {
   try {
+    if (!process.env.MONGO_URI) throw new Error("MONGO_URI not set in environment");
     console.log("🔗 Connecting to MongoDB...");
-    await mongoose.connect(MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true });
+
+    // Connect to MongoDB Atlas (password with special characters is URL-encoded)
+    await mongoose.connect(process.env.MONGO_URI);
     console.log("✅ MongoDB connected");
 
-    server.listen(PORT, "0.0.0.0", () =>
-      console.log(`🚀 Server running on port ${PORT} (bound to 0.0.0.0)`)
-    );
+    server.listen(PORT, "0.0.0.0", () => console.log(`🚀 Server running on port ${PORT}`));
   } catch (err) {
     console.error("❌ MongoDB connection error:", err.message);
     process.exit(1);
