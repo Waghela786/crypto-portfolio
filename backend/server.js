@@ -23,6 +23,8 @@ const allowedOrigins = [
   process.env.CLIENT_URL,
   "http://localhost:3000",
   "http://localhost:3001",
+  // Deployed frontend on Render (add other deploy URLs here as needed)
+  "https://crypto-portfolio-frontend-xdk2.onrender.com",
 ].filter(Boolean);
 
 app.use(
