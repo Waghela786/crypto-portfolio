@@ -1,8 +1,18 @@
 import axios from "axios";
 
 // Create API instance for your backend
+// Prefer a build-time env var (REACT_APP_API_BASE). If it's not provided,
+// fall back to a runtime-friendly origin-based URL so deployed builds don't
+// accidentally call localhost. When backend is on a different origin, set
+// REACT_APP_API_BASE in your Render/hosting environment and rebuild.
+const defaultBase =
+  process.env.REACT_APP_API_BASE ||
+  (typeof window !== "undefined"
+    ? `${window.location.origin.replace(/\/$/, '')}/api`
+    : "/api");
+
 const API = axios.create({
-  baseURL: "http://localhost:5000/api",
+  baseURL: defaultBase,
   headers: {
     "Content-Type": "application/json",
   },

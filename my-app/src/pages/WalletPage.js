@@ -1,26 +1,26 @@
 // src/pages/WalletPage.js
-import React, { useEffect, useState } from "react";
-import axios from "axios";
+import React, { useEffect, useState, useCallback } from "react";
+import API from "../services/api";
 import WalletActions from "../components/WalletActions";
 
 const WalletPage = () => {
   const [wallet, setWallet] = useState(null);
   const token = localStorage.getItem("token");
 
-  const fetchWallet = async () => {
+  const fetchWallet = useCallback(async () => {
     try {
-      const res = await axios.get("http://localhost:5000/api/wallets", {
+      const res = await API.get("/wallets", {
         headers: { Authorization: `Bearer ${token}` },
       });
       setWallet(res.data[0]); // assuming first wallet for simplicity
     } catch (err) {
       console.error("Error fetching wallet:", err);
     }
-  };
+  }, [token]);
 
   useEffect(() => {
     fetchWallet();
-  }, []);
+  }, [fetchWallet]);
 
   return (
     <div className="max-w-md mx-auto mt-10 p-6 bg-white shadow-lg rounded-xl">

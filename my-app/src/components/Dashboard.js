@@ -28,11 +28,12 @@ export default function NotificationBell({ token, userId }) {
 
     fetchNotifications();
 
-    // derive backend origin from API baseURL (e.g. http://localhost:5000)
-    const backendOrigin =
-      (API.defaults && API.defaults.baseURL
-        ? String(API.defaults.baseURL).replace(/\/api\/?$/, "")
-        : "") || "http://localhost:5000";
+    // derive backend origin from API baseURL (build/runtime):
+    // - if API.defaults.baseURL is set, strip trailing /api
+    // - otherwise use the current window origin (so deployed frontend uses its host)
+    const backendOrigin = API.defaults && API.defaults.baseURL
+      ? String(API.defaults.baseURL).replace(/\/api\/?$/, "")
+      : (typeof window !== "undefined" ? window.location.origin : "");
 
     const socket = io(backendOrigin, { auth: { token: tokenLocal } });
 

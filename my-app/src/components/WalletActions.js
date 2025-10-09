@@ -1,6 +1,6 @@
 // src/components/WalletActions.js
 import React, { useState } from "react";
-import axios from "axios";
+import API from "../services/api";
 
 const WalletActions = ({ walletAddress, onUpdateBalance }) => {
   const [showSendForm, setShowSendForm] = useState(false);
@@ -15,8 +15,8 @@ const WalletActions = ({ walletAddress, onUpdateBalance }) => {
   const handleSend = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post(
-        "http://localhost:5000/api/wallets/send",
+      const res = await API.post(
+        "/wallets/send",
         { toAddress, amount: Number(amount) },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -32,8 +32,8 @@ const WalletActions = ({ walletAddress, onUpdateBalance }) => {
   // Show wallet address (receive)
   const handleReceive = async () => {
     try {
-      const res = await axios.post(
-        "http://localhost:5000/api/wallets/receive",
+      const res = await API.post(
+        "/wallets/receive",
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );

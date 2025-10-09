@@ -112,9 +112,9 @@ export default function NotificationBell({ token, userId }) {
       return;
     }
 
-    const backendOrigin = (API.defaults && API.defaults.baseURL
+    const backendOrigin = API.defaults && API.defaults.baseURL
       ? String(API.defaults.baseURL).replace(/\/api\/?$/, "")
-      : "") || "http://localhost:5000";
+      : (typeof window !== "undefined" ? window.location.origin : "");
 
     const socket = io(backendOrigin, { auth: { token: tokenLocal } });
 

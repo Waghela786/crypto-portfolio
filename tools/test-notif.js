@@ -2,7 +2,7 @@ const axios = require('axios');
 
 (async () => {
   try {
-    const base = 'http://localhost:5000/api';
+  const base = process.env.API_BASE || 'http://localhost:5000/api';
     const ts = Date.now();
   const emailA = `userA_${ts}@example.com`;
   const emailB = `userB_${ts}@example.com`;
